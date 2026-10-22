@@ -1,0 +1,39 @@
+# compiled output
+/dist
+/tmp
+/node_modules
+*.tsbuildinfo
+
+# environment (contiene secretos: DATABASE_URL, JWT_SECRET)
+.env
+.env.*
+!.env.example
+
+# uploads de fotos
+/uploads
+
+# prisma
+prisma/*.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# Tests / coverage
+/coverage
+.nyc_output
+
+# Firebase
+serviceAccount.json

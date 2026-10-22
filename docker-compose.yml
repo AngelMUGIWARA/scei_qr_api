@@ -1,0 +1,25 @@
+# Opción LOCAL de base de datos (fallback si no hay internet / para onboarding).
+# La base compartida del equipo es Neon (ver README). Este compose replica
+# el mismo Postgres en local para quien prefiera trabajar aislado.
+# Uso: docker compose up -d db
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: scei_qr_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: scei
+      POSTGRES_PASSWORD: scei_dev
+      POSTGRES_DB: scei_qr
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scei -d scei_qr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

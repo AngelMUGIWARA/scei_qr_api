@@ -1,0 +1,92 @@
+// ============================================================
+// scei_qr_api - Modelo de datos (ver arquitectura-backend.md §3)
+// Neon: DATABASE_URL = pooled (app), DIRECT_URL = directo (migrate)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Rol {
+  ALUMNO
+  SOPORTE
+  ADMIN
+}
+
+enum EstadoUso {
+  ACTIVO
+  FINALIZADO
+}
+
+enum EstadoIncidencia {
+  PENDIENTE
+  EN_ATENCION
+  RESUELTA
+}
+
+model Usuario {
+  id           Int         @id @default(autoincrement())
+  username     String      @unique
+  passwordHash String
+  fullName     String
+  rol          Rol
+  activo       Boolean     @default(true)
+  fcmToken     String?     @unique // push notifications (HU-AL-09, HU-ST-08)
+  createdAt    DateTime    @default(now())
+  usos         Uso[]
+  incidenciasReportadas Incidencia[] @relation("Reportadas")
+  incidenciasAtendidas  Incidencia[] @relation("Atendidas")
+}
+
+model Equipo {
+  id          Int          @id @default(autoincrement())
+  codigo      String       @unique // código interno del equipo
+  nombre      String
+  descripcion String?
+  ubicacion   String // laboratorio, salón, fila (HU-ST-03)
+  qrToken     String       @unique // payload del QR único (HU-AD-06)
+  activo      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  usos        Uso[]
+  incidencias Incidencia[]
+}
+
+model Uso {
+  id       Int       @id @default(autoincrement())
+  alumno   Usuario   @relation(fields: [alumnoId], references: [id])
+  alumnoId Int
+  equipo   Equipo    @relation(fields: [equipoId], references: [id])
+  equipoId Int
+  inicio   DateTime  @default(now())
+  fin      DateTime?
+  estado   EstadoUso @default(ACTIVO)
+
+  @@index([alumnoId, estado])
+  @@index([equipoId])
+}
+
+model Incidencia {
+  id             Int              @id @default(autoincrement())
+  equipo         Equipo           @relation(fields: [equipoId], references: [id])
+  equipoId       Int
+  reportadaPor   Usuario          @relation("Reportadas", fields: [reportadaPorId], references: [id])
+  reportadaPorId Int
+  atendidaPor    Usuario?         @relation("Atendidas", fields: [atendidaPorId], references: [id])
+  atendidaPorId  Int?
+  titulo         String
+  descripcion    String
+  fotoUrl        String? // HU-AL-08 (storage: local / S3 / Cloudinary)
+  estado         EstadoIncidencia @default(PENDIENTE)
+  solucion       String?
+  creadaEn       DateTime         @default(now())
+  actualizadaEn  DateTime         @updatedAt
+
+  @@index([estado])
+  @@index([equipoId])
+}
